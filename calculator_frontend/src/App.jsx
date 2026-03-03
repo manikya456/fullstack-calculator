@@ -258,6 +258,9 @@ function App() {
     <main className="flex min-h-screen items-center justify-center p-4">
       <section className="animate-reveal w-full max-w-sm rounded-3xl border border-slate-600/40 bg-panel/80 p-5 shadow-soft backdrop-blur md:p-6">
         <header className="mb-4">
+          <h1 className="mb-2 text-center text-lg font-semibold tracking-wide text-cyan-300">
+            Manikya
+          </h1>
           <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">
             {topStatus}
           </p>
