@@ -1,0 +1,15 @@
+[Unit]
+Description=Gunicorn daemon for calculator_backend
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/fullstack-calculator/calculator_backend
+Environment="DJANGO_ENV=production"
+EnvironmentFile=/home/ubuntu/fullstack-calculator/calculator_backend/.env
+ExecStart=/home/ubuntu/fullstack-calculator/.venv/bin/gunicorn --config gunicorn.conf.py calculator_backend.wsgi:application
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

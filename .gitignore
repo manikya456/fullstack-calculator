@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.sqlite3
+
+# Environment files
+.env
+calculator_backend/.env
+calculator_frontend/.env
+
+# Django static/media
+calculator_backend/staticfiles/
+
+# Node
+calculator_frontend/node_modules/
+calculator_frontend/dist/
+
+# Misc
+.DS_Store
+Thumbs.db
