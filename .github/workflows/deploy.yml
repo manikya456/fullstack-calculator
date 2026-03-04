@@ -1,0 +1,58 @@
+name: Deploy to EC2
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: Run deploy script on EC2 over SSH
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_PROJECT_PATH: ${{ secrets.EC2_PROJECT_PATH }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${EC2_HOST}" ] || [ -z "${EC2_USER}" ] || [ -z "${EC2_PROJECT_PATH}" ] || [ -z "${EC2_SSH_KEY}" ]; then
+            echo "Missing required GitHub Secrets. Required: EC2_HOST, EC2_USER, EC2_PROJECT_PATH, EC2_SSH_KEY."
+            exit 1
+          fi
+
+          printf '%s\n' "${EC2_SSH_KEY}" > key.pem
+          chmod 600 key.pem
+
+          ssh -o StrictHostKeyChecking=no -i key.pem "${EC2_USER}@${EC2_HOST}" "export EC2_PROJECT_PATH='${EC2_PROJECT_PATH}'; bash -s" << 'EOF'
+            set -euo pipefail
+
+            cd "${EC2_PROJECT_PATH}"
+            git pull --ff-only origin main
+
+            source .venv/bin/activate
+
+            cd calculator_backend
+            pip install -r requirements.txt
+            python manage.py migrate
+            python manage.py collectstatic --noinput
+            sudo systemctl restart gunicorn
+
+            cd ../calculator_frontend
+            npm ci
+            npm run build
+            sudo rm -rf /var/www/calculator_frontend/*
+            sudo cp -r dist/* /var/www/calculator_frontend/
+            sudo systemctl reload nginx
+          EOF
